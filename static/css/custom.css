@@ -1,0 +1,395 @@
+/* static/css/custom.css */
+
+/* Дополнительные кастомные стили для проекта */
+
+/* Загрузочные анимации */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Градиентные границы */
+.border-gradient {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) 1;
+    border-radius: 15px;
+}
+
+/* Кастомные скроллбары */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+/* Стили для статусов заказов */
+.status-pending {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #856404;
+}
+
+.status-in-progress {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.status-cancelled {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+/* Стили для уровней склада */
+.stock-critical {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: #721c24;
+}
+
+.stock-low {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #856404;
+}
+
+.stock-normal {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+/* Специальные эффекты для карточек */
+.card-hover-effect {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.card-hover-effect:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для модальных окон */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-radius: 15px 15px 0 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Анимация появления элементов */
+.animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Стили для навигационных элементов */
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 25px;
+}
+
+/* Стили для прогресс баров */
+.progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 5px;
+}
+
+/* Специальные отступы */
+.mt-7 {
+    margin-top: 5rem !important;
+}
+
+.mb-7 {
+    margin-bottom: 5rem !important;
+}
+
+.py-7 {
+    padding-top: 5rem !important;
+    padding-bottom: 5rem !important;
+}
+
+/* Стили для списков */
+.list-group-item {
+    border: none;
+    border-radius: 10px !important;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+/* Стили для поиска */
+.search-box {
+    position: relative;
+}
+
+.search-box .form-control {
+    padding-left: 2.5rem;
+}
+
+.search-box .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+/* Кастомные размеры аватаров */
+.avatar-xs {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+}
+
+.avatar-md {
+    width: 3rem;
+    height: 3rem;
+}
+
+.avatar-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+.avatar-xl {
+    width: 6rem;
+    height: 6rem;
+}
+
+/* Стили для дропдаунов */
+.dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    border-radius: 5px;
+    margin: 2px 5px;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Адаптивные улучшения */
+@media (max-width: 576px) {
+    .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .h1, .h2 {
+        font-size: 1.5rem;
+    }
+
+    .stats-card {
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .table-responsive {
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .modal-dialog {
+        margin: 10px;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Стили для печати */
+@media print {
+    .navbar,
+    .btn,
+    .sidebar {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+
+    body {
+        background: white !important;
+    }
+}
+
+/* Темная тема (опционально) */
+.dark-theme {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .card {
+    background-color: #2d2d2d !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .navbar {
+    background-color: #1a1a1a !important;
+}
+
+.dark-theme .form-control,
+.dark-theme .form-select {
+    background-color: #2d2d2d !important;
+    border-color: #404040 !important;
+    color: #ffffff !important;
+}
+
+/* Дополнительные утилиты */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.user-select-none {
+    user-select: none;
+}
+
+/* Специальные эффекты загрузки */
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Стили для уведомлений */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Эффекты для изображений */
+.img-hover-zoom {
+    transition: transform 0.3s ease;
+}
+
+.img-hover-zoom:hover {
+    transform: scale(1.1);
+}
+
+/* Кастомные разделители */
+.divider {
+    height: 1px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 2rem 0;
+    border: none;
+}
+
+/* Финальные штрихи */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.neon-glow {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}

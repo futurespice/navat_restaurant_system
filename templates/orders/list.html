@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Управление заказами{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">
+            <i class="fas fa-shopping-cart me-2 text-primary"></i>Заказы
+        </h1>
+        <p class="text-muted">Управление заказами ресторана</p>
+    </div>
+    <a href="{% url 'orders:create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Новый заказ
+    </a>
+</div>
+
+<!-- Фильтры -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Статус</label>
+                <select name="status" class="form-select" style="border-radius: 10px;">
+                    <option value="">Все статусы</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Филиал</label>
+                <select name="restaurant" class="form-select" style="border-radius: 10px;">
+                    <option value="">Все филиалы</option>
+                    {% for restaurant in restaurants %}
+                        <option value="{{ restaurant.id }}" {% if current_restaurant == restaurant.id|stringformat:"s" %}selected{% endif %}>
+                            {{ restaurant.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="d-grid gap-2 d-md-flex w-100">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        <i class="fas fa-search me-1"></i>Фильтр
+                    </button>
+                    <a href="{% url 'orders:list' %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="fas fa-times me-1"></i>Сброс
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Список заказов -->
+<div class="row">
+    {% for order in orders %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1">Заказ #{{ order.id }}</h5>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>{{ order.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </div>
+                    <span class="badge rounded-pill {% if order.status == 'COMPLETED' %}bg-success{% elif order.status == 'PENDING' %}bg-warning{% elif order.status == 'IN_PROGRESS' %}bg-info{% else %}bg-secondary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-store me-2 text-muted"></i>
+                        <span class="fw-semibold">{{ order.restaurant.name }}</span>
+                    </div>
+                    {% if order.table_number %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-chair me-2 text-muted"></i>
+                        <span>Стол №{{ order.table_number }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.created_by %}
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user me-2 text-muted"></i>
+                        <span>{{ order.created_by.get_full_name|default:order.created_by.username }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="h5 mb-0 text-success fw-bold">{{ order.total_price }} ₽</div>
+                    <a href="{% url 'orders:detail' pk=order.pk %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-eye me-1"></i>Подробнее
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Заказов пока нет</h4>
+                <p class="text-muted">Создайте первый заказ для начала работы</p>
+                <a href="{% url 'orders:create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Создать заказ
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if is_paginated %}
+<nav class="d-flex justify-content-center mt-4">
+    <ul class="pagination pagination-lg">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-pill me-2" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_restaurant %}&restaurant={{ current_restaurant }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link rounded-pill me-2">{{ page_obj.number }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-pill" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_restaurant %}&restaurant={{ current_restaurant }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

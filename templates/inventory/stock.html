@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Остатки на складе{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">
+            <i class="fas fa-boxes me-2 text-primary"></i>Остатки на складе
+        </h1>
+        <p class="text-muted">Текущие остатки по филиалам</p>
+    </div>
+    <a href="{% url 'inventory:add_stock_item' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Добавить товар
+    </a>
+</div>
+
+<!-- Фильтр по ресторану -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Филиал</label>
+                <select name="restaurant" class="form-select" style="border-radius: 10px;">
+                    <option value="">Все филиалы</option>
+                    {% for restaurant in restaurants %}
+                        <option value="{{ restaurant.id }}" {% if current_restaurant == restaurant.id|stringformat:"s" %}selected{% endif %}>
+                            {{ restaurant.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="d-grid gap-2 d-md-flex w-100">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        <i class="fas fa-search me-1"></i>Показать
+                    </button>
+                    <a href="{% url 'inventory:stock' %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="fas fa-times me-1"></i>Сброс
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Список остатков -->
+<div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="card-body">
+        {% if stock_items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-bold">Ингредиент</th>
+                        <th class="fw-bold">Филиал</th>
+                        <th class="fw-bold text-center">Количество</th>
+                        <th class="fw-bold text-center">Ед. изм.</th>
+                        <th class="fw-bold text-center">Статус</th>
+                        <th class="fw-bold text-center">Обновлено</th>
+                        <th class="fw-bold text-center">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in stock_items %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-seedling text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ item.ingredient.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark rounded-pill">
+                                <i class="fas fa-store me-1"></i>{{ item.restaurant.name }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="h5 mb-0 fw-bold {% if item.quantity < 10 %}text-danger{% elif item.quantity < 50 %}text-warning{% else %}text-success{% endif %}">
+                                {{ item.quantity }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="text-muted">{{ item.ingredient.unit }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if item.quantity < 10 %}
+                                <span class="badge bg-danger rounded-pill">Критично</span>
+                            {% elif item.quantity < 50 %}
+                                <span class="badge bg-warning rounded-pill">Мало</span>
+                            {% else %}
+                                <span class="badge bg-success rounded-pill">В наличии</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <small class="text-muted">{{ item.last_updated|date:"d.m H:i" }}</small>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'inventory:stock_update' pk=item.pk %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                <i class="fas fa-edit me-1"></i>Изменить
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Склад пуст</h4>
+            <p class="text-muted">Добавьте первые товары на склад</p>
+            <a href="{% url 'inventory:add_stock_item' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Добавить товар
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if is_paginated %}
+<nav class="d-flex justify-content-center mt-4">
+    <ul class="pagination pagination-lg">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-pill me-2" href="?page={{ page_obj.previous_page_number }}{% if current_restaurant %}&restaurant={{ current_restaurant }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link rounded-pill me-2">{{ page_obj.number }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-pill" href="?page={{ page_obj.next_page_number }}{% if current_restaurant %}&restaurant={{ current_restaurant }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

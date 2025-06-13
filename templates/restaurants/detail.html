@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>{{ restaurant.name }}</h1>
+        <p class="text-muted">{{ restaurant.address }}</p>
+        <p><strong>Телефон:</strong> {{ restaurant.phone_number }}</p>
+
+        <!-- TODO: Сюда можно будет добавить список сотрудников или статистику по филиалу -->
+    </div>
+    <div class="col-md-4">
+        {% if restaurant.image %}
+            <img src="{{ restaurant.image.url }}" class="img-fluid rounded" alt="{{ restaurant.name }}">
+        {% else %}
+            <img src="https://via.placeholder.com/400x300.png?text=Navat" class="img-fluid rounded" alt="No image">
+        {% endif %}
+    </div>
+</div>
+<hr>
+<a href="{% url 'restaurants:list' %}" class="btn btn-secondary">← Назад к списку</a>
+<!-- TODO: Добавить кнопки "Редактировать" и "Удалить" -->
+{% endblock %}

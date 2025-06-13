@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">Заказ #{{ order.id }}</h1>
+        <p class="text-muted">{{ order.created_at|date:"d F Y, H:i" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'orders:update_status' pk=order.pk %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-edit me-1"></i>Изменить статус
+        </a>
+        <a href="{% url 'orders:list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Назад
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Информация о заказе -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>Информация
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong class="text-muted">Статус:</strong><br>
+                    <span class="badge rounded-pill fs-6 {% if order.status == 'COMPLETED' %}bg-success{% elif order.status == 'PENDING' %}bg-warning{% elif order.status == 'IN_PROGRESS' %}bg-info{% else %}bg-secondary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <strong class="text-muted">Филиал:</strong><br>
+                    <i class="fas fa-store me-2 text-primary"></i>{{ order.restaurant.name }}
+                </div>
+
+                {% if order.table_number %}
+                <div class="mb-3">
+                    <strong class="text-muted">Номер стола:</strong><br>
+                    <i class="fas fa-chair me-2 text-primary"></i>Стол №{{ order.table_number }}
+                </div>
+                {% endif %}
+
+                {% if order.created_by %}
+                <div class="mb-3">
+                    <strong class="text-muted">Сотрудник:</strong><br>
+                    <i class="fas fa-user me-2 text-primary"></i>{{ order.created_by.get_full_name|default:order.created_by.username }}
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <strong class="text-muted">Время создания:</strong><br>
+                    <i class="fas fa-clock me-2 text-primary"></i>{{ order.created_at|date:"d.m.Y H:i" }}
+                </div>
+
+                <hr>
+                <div class="text-center">
+                    <div class="h3 text-success fw-bold mb-0">{{ order.total_price }} ₽</div>
+                    <small class="text-muted">Общая сумма</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Позиции заказа -->
+    <div class="col-md-8 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-header bg-white border-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-list me-2 text-primary"></i>Состав заказа
+                    </h5>
+                    {% if order.status == 'PENDING' %}
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="fas fa-plus me-1"></i>Добавить блюдо
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                {% for item in order.items.all %}
+                <div class="d-flex justify-content-between align-items-center py-3 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="d-flex align-items-center">
+                        {% if item.menu_item.image %}
+                            <img src="{{ item.menu_item.image.url }}" class="rounded me-3" width="60" height="60" style="object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-utensils text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <div class="fw-semibold">{{ item.menu_item.name }}</div>
+                            <small class="text-muted">{{ item.price_at_moment }} ₽ за штуку</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ item.quantity }} x {{ item.price_at_moment }} ₽</div>
+                        <div class="text-success fw-bold">{{ item.get_cost }} ₽</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <i class="fas fa-utensils fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">В заказе пока нет блюд</p>
+                    {% if order.status == 'PENDING' %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="fas fa-plus me-2"></i>Добавить первое блюдо
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для добавления блюда -->
+{% if order.status == 'PENDING' %}
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 15px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-plus me-2 text-primary"></i>Добавить блюдо в заказ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'orders:add_item' order_id=order.id %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label fw-semibold">Выберите блюдо</label>
+                            <select name="menu_item_id" class="form-select" required style="border-radius: 10px;">
+                                <option value="">-- Выберите блюдо --</option>
+                                {% regroup menu_items by category as category_list %}
+                                {% for category in category_list %}
+                                    <optgroup label="{{ category.grouper.name }}">
+                                        {% for item in category.list %}
+                                            <option value="{{ item.id }}">{{ item.name }} - {{ item.price }} ₽</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Количество</label>
+                            <input type="number" name="quantity" class="form-control" value="1" min="1" required style="border-radius: 10px;">
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Добавить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Обновляем контекст для модального окна
+document.addEventListener('DOMContentLoaded', function() {
+    {% for category in menu_categories %}
+    // Логика для работы с меню (если нужно)
+    {% endfor %}
+});
+</script>
+{% endblock %}

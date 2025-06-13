@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Управление складом{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">
+            <i class="fas fa-warehouse me-2 text-primary"></i>Склад
+        </h1>
+        <p class="text-muted">Управление запасами и ингредиентами</p>
+    </div>
+    <div>
+        <a href="{% url 'inventory:add_stock_item' %}" class="btn btn-primary me-2">
+            <i class="fas fa-plus me-1"></i>Добавить товар
+        </a>
+        <a href="{% url 'inventory:ingredient_create' %}" class="btn btn-outline-primary">
+            <i class="fas fa-plus me-1"></i>Новый ингредиент
+        </a>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0 fw-bold">{{ total_ingredients }}</div>
+                        <div class="small">Ингредиентов</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-seedling fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0 fw-bold">{{ restaurants.count }}</div>
+                        <div class="small">Филиалов</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-store fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0 fw-bold">{{ stock_items.count }}</div>
+                        <div class="small">Позиций на складе</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-boxes fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="h4 mb-0 fw-bold text-danger">{{ low_stock_items.count }}</div>
+                        <div class="small">Заканчивается</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Быстрые действия -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 15px;">
+            <i class="fas fa-seedling fa-3x text-success mb-3"></i>
+            <h5 class="fw-bold">Ингредиенты</h5>
+            <p class="text-muted">Управление списком ингредиентов</p>
+            <a href="{% url 'inventory:ingredients' %}" class="btn btn-outline-success rounded-pill">
+                <i class="fas fa-eye me-1"></i>Просмотреть
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 15px;">
+            <i class="fas fa-warehouse fa-3x text-primary mb-3"></i>
+            <h5 class="fw-bold">Склад</h5>
+            <p class="text-muted">Остатки по филиалам</p>
+            <a href="{% url 'inventory:stock' %}" class="btn btn-outline-primary rounded-pill">
+                <i class="fas fa-eye me-1"></i>Просмотреть
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 15px;">
+            <i class="fas fa-plus-circle fa-3x text-info mb-3"></i>
+            <h5 class="fw-bold">Добавить товар</h5>
+            <p class="text-muted">Пополнить склад</p>
+            <a href="{% url 'inventory:add_stock_item' %}" class="btn btn-outline-info rounded-pill">
+                <i class="fas fa-plus me-1"></i>Добавить
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Товары, которые заканчиваются -->
+{% if low_stock_items %}
+<div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="mb-0 fw-bold text-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>Заканчивающиеся товары
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for item in low_stock_items %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="alert alert-warning mb-0" style="border-radius: 10px;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ item.ingredient.name }}</strong><br>
+                            <small class="text-muted">{{ item.restaurant.name }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="h5 mb-0 text-danger">{{ item.quantity }}</div>
+                            <small class="text-muted">{{ item.ingredient.unit }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

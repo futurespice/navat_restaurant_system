@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Управление ингредиентами{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">
+            <i class="fas fa-seedling me-2 text-success"></i>Ингредиенты
+        </h1>
+        <p class="text-muted">Управление списком ингредиентов</p>
+    </div>
+    <a href="{% url 'inventory:ingredient_create' %}" class="btn btn-success">
+        <i class="fas fa-plus me-2"></i>Добавить ингредиент
+    </a>
+</div>
+
+<!-- Поиск -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label fw-semibold">Поиск ингредиентов</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control" placeholder="Название ингредиента или единица измерения..." value="{{ search_query }}" style="border-left: none;">
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="d-grid gap-2 d-md-flex w-100">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        <i class="fas fa-search me-1"></i>Найти
+                    </button>
+                    <a href="{% url 'inventory:ingredients' %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="fas fa-times me-1"></i>Сброс
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Список ингредиентов -->
+<div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="card-body">
+        {% if ingredients %}
+        <div class="row">
+            {% for ingredient in ingredients %}
+            <div class="col-lg-6 col-xl-4 mb-3">
+                <div class="card border-0 bg-light h-100" style="border-radius: 10px;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-seedling text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">{{ ingredient.name }}</h6>
+                                <span class="badge bg-success rounded-pill">{{ ingredient.unit }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-seedling fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Ингредиентов пока нет</h4>
+            <p class="text-muted">Добавьте первый ингредиент в систему</p>
+            <a href="{% url 'inventory:ingredient_create' %}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Добавить ингредиент
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if is_paginated %}
+<nav class="d-flex justify-content-center mt-4">
+    <ul class="pagination pagination-lg">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-pill me-2" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link rounded-pill me-2">{{ page_obj.number }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-pill" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

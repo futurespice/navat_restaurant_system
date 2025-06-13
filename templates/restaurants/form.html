@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Создание филиала{% endblock %}
+
+{% block content %}
+<h1>Создание нового филиала</h1>
+<hr>
+
+<form method="post" enctype="multipart/form-data"> <!-- enctype нужен для загрузки файлов! -->
+    {% csrf_token %}
+
+    <!-- Изящный способ отрендерить все поля формы с абзацами -->
+    {{ form.as_p }}
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <a href="{% url 'restaurants:list' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
