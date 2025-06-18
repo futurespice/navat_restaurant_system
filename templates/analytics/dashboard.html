@@ -98,7 +98,7 @@
                         <div class="text-muted">Заказов</div>
                     </div>
                     <div class="col-6">
-                        <div class="h3 text-success fw-bold">{{ recent_revenue|floatformat:0 }} ₽</div>
+                        <div class="h3 text-success fw-bold">{{ recent_revenue|floatformat:0 }} сом</div>
                         <div class="text-muted">Выручка</div>
                     </div>
                 </div>
@@ -172,7 +172,7 @@
                         <small class="text-muted">{{ order.restaurant.name }} • {{ order.created_at|date:"d.m H:i" }}</small>
                     </div>
                     <div class="text-end">
-                        <div class="fw-semibold">{{ order.total_price }} ₽</div>
+                        <div class="fw-semibold">{{ order.total_price }} сом</div>
                         <span class="badge bg-{% if order.status == 'COMPLETED' %}success{% elif order.status == 'PENDING' %}warning{% else %}primary{% endif %} rounded-pill small">
                             {{ order.get_status_display }}
                         </span>

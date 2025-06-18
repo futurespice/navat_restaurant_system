@@ -3,93 +3,141 @@
 {% block title %}Вход в систему{% endblock %}
 
 {% block content %}
-<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5 col-xl-4">
-                <div class="card shadow-lg border-0" style="border-radius: 15px;">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-4">
-                            <div class="bg-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="fas fa-utensils fa-2x text-white"></i>
-                            </div>
-                            <h3 class="fw-bold text-dark">Navat System</h3>
-                            <p class="text-muted">Войдите в свой аккаунт</p>
-                        </div>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary mb-1">🍽️ НАВAT</h2>
+                    <p class="text-muted">Система управления ресторанами</p>
+                </div>
 
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                {% for error in form.non_field_errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-
-                        <form method="post">
-                            {% csrf_token %}
-
-                            <div class="mb-3">
-                                <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">Email</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="fas fa-envelope text-muted"></i>
-                                    </span>
-                                    {{ form.username }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold">Пароль</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="fas fa-lock text-muted"></i>
-                                    </span>
-                                    {{ form.password }}
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 10px;">
-                                <i class="fas fa-sign-in-alt me-2"></i>Войти
-                            </button>
-                        </form>
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        {{ form.errors }}
                     </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.username.label }}
+                        </label>
+                        {{ form.username }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.password.label }}
+                        </label>
+                        {{ form.password }}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.remember_me }}
+                        <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">
+                            {{ form.remember_me.label }}
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        <i class="fas fa-sign-in-alt me-2"></i>Войти в систему
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        Система управления сетью ресторанов "Нават"<br>
+                        Версия 1.0 | 2024
+                    </small>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-/* Стили для полей формы */
-#id_username, #id_password {
-    border: 1px solid #e3e6f0;
-    border-left: none;
-    border-radius: 0 10px 10px 0;
-    padding: 0.75rem;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-}
-
-#id_username:focus, #id_password:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    outline: none;
-}
-
-.input-group-text {
-    border-radius: 10px 0 0 10px;
-    border-right: none;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    transition: transform 0.2s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-</style>
 {% endblock %}
+"""
+
+# 5. ОБНОВЛЕНИЕ НАВИГАЦИИ В base.html ДЛЯ РОЛЕЙ
+
+# В templates/base.html обновить навигацию
+"""
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'analytics:dashboard' %}">
+            <i class="fas fa-utensils me-2"></i>НАВАТ
+        </a>
+
+        {% if user.is_authenticated %}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'analytics:dashboard' %}">
+                        <i class="fas fa-tachometer-alt me-1"></i>Дашборд
+                    </a>
+                </li>
+
+                {% if user.role == 'ADMIN' or user.role == 'MANAGER' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'restaurants:list' %}">
+                        <i class="fas fa-building me-1"></i>Филиалы
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'staff:list' %}">
+                        <i class="fas fa-users me-1"></i>Персонал
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'inventory:dashboard' %}">
+                        <i class="fas fa-warehouse me-1"></i>Склад
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'menu:list' %}">
+                        <i class="fas fa-utensils me-1"></i>Меню
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'orders:list' %}">
+                        <i class="fas fa-shopping-cart me-1"></i>Заказы
+                    </a>
+                </li>
+                {% if user.role == 'ADMIN' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'accounts:user_management' %}">
+                        <i class="fas fa-users-cog me-1"></i>Пользователи
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+                        <span class="badge bg-light text-dark ms-1">{{ user.get_role_display }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                            <i class="fas fa-user me-2"></i>Профиль
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Выход
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</nav>

@@ -201,5 +201,82 @@
             });
         });
     </script>
+
+    <script>
+// Глобальная функция для форматирования валюты
+function formatSom(amount) {
+    if (typeof amount === 'string') {
+        amount = parseFloat(amount.replace(/[^\d.,]/g, '').replace(',', '.'));
+    }
+    if (isNaN(amount)) return '0 сом';
+
+    return Math.round(amount).toLocaleString('ru-KG') + ' сом';
+}
+
+// Автоматическая замена валюты на всех страницах
+document.addEventListener('DOMContentLoaded', function() {
+    // Находим все элементы с ценами
+    const priceSelectors = '.price, [data-price], .total-price, .menu-price, .order-total, .receipt-amount';
+    const priceElements = document.querySelectorAll(priceSelectors);
+
+    priceElements.forEach(element => {
+        const priceValue = element.dataset.price || element.textContent;
+        const price = parseFloat(priceValue.toString().match(/[\d.,]+/)?.[0]?.replace(',', '.') || 0);
+
+        if (price > 0) {
+            // Заменяем рубли на сомы
+            element.innerHTML = element.innerHTML.replace(
+                /(\d+(?:[.,]\d+)?)\s*(руб|₽|rub|р\.|р)/gi,
+                formatSom(price)
+            );
+
+            // Если есть data-price, обновляем отображение
+            if (element.dataset.price) {
+                element.textContent = formatSom(price);
+            }
+        }
+    });
+
+    // Заменяем в placeholder'ах и labels
+    const inputs = document.querySelectorAll('input[placeholder*="руб"], input[placeholder*="₽"], label');
+    inputs.forEach(input => {
+        if (input.placeholder) {
+            input.placeholder = input.placeholder.replace(/(руб|₽|rub|р\.|р)/gi, 'сом');
+        }
+        if (input.textContent) {
+            input.textContent = input.textContent.replace(/(руб|₽|rub|р\.|р)/gi, 'сом');
+        }
+    });
+});
+
+// Функция для показа уведомлений
+function showToast(message, type = 'info') {
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+</script>
 </body>
 </html>

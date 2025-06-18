@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Рецепты блюд{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">
+            <i class="fas fa-book-open me-2 text-primary"></i>Рецепты блюд
+        </h1>
+        <p class="text-muted">Управление составом блюд и расчет ингредиентов</p>
+    </div>
+    <a href="{% url 'inventory:recipe_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Добавить рецепт
+    </a>
+</div>
+
+{% if menu_items_without_recipes %}
+<div class="alert alert-warning">
+    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Внимание!</h6>
+    <p class="mb-2">Следующие блюда не имеют рецептов:</p>
+    <ul class="mb-0">
+        {% for item in menu_items_without_recipes %}
+            <li>{{ item.name }} ({{ item.category.name }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row">
+    {% for menu_item, recipes in recipes_by_item.items %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+            <div class="card-header bg-primary text-white" style="border-radius: 15px 15px 0 0;">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-utensils me-2"></i>{{ menu_item.name }}
+                </h6>
+                <small class="opacity-75">{{ menu_item.category.name }}</small>
+            </div>
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Состав на 1 порцию:</h6>
+                <ul class="list-unstyled">
+                    {% for recipe in recipes %}
+                    <li class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ recipe.ingredient.name }}</span>
+                        <span class="badge bg-light text-dark">
+                            {{ recipe.quantity }} {{ recipe.ingredient.unit }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-book-open fa-3x mb-3"></i>
+            <h5>Рецепты не найдены</h5>
+            <p>Начните с создания рецепта для одного из блюд</p>
+            <a href="{% url 'inventory:recipe_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Создать первый рецепт
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+<!-- templates/inventory/recipe_form.html -->
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Редактировать рецепт{% else %}Новый рецепт{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-header bg-white border-0 text-center py-4">
+                <h4 class="fw-bold mb-2">
+                    <i class="fas fa-book-open me-2 text-primary"></i>
+                    {% if object %}Редактировать рецепт{% else %}Новый рецепт{% endif %}
+                </h4>
+                <p class="text-muted mb-0">Управление составом блюд</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.menu_item.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-utensils me-2 text-primary"></i>Блюдо *
+                        </label>
+                        {{ form.menu_item }}
+                        {% if form.menu_item.errors %}
+                            <div class="text-danger small mt-1">{{ form.menu_item.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Выберите блюдо для которого создается рецепт</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.ingredient.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-seedling me-2 text-primary"></i>Ингредиент *
+                        </label>
+                        {{ form.ingredient }}
+                        {% if form.ingredient.errors %}
+                            <div class="text-danger small mt-1">{{ form.ingredient.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Выберите ингредиент, который входит в состав блюда</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-balance-scale me-2 text-primary"></i>Количество на 1 порцию *
+                        </label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                            <div class="text-danger small mt-1">{{ form.quantity.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Сколько единиц ингредиента нужно для приготовления одной порции</div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-3">
+                        <a href="{% url 'inventory:recipes' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if object %}Обновить{% else %}Создать{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

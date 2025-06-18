@@ -4,15 +4,25 @@ from apps.menu.models import MenuItem
 
 
 class Ingredient(models.Model):
+    UNIT_CHOICES = [
+        ('кг', 'Килограммы'),
+        ('г', 'Граммы'),
+        ('л', 'Литры'),
+        ('мл', 'Миллилитры'),
+        ('шт', 'Штуки'),
+        ('уп', 'Упаковки'),
+    ]
+
     name = models.CharField('Название ингредиента', max_length=100, unique=True)
-    unit = models.CharField('Единица измерения', max_length=20, help_text='например: кг, л, шт.')
+    unit = models.CharField('Единица измерения', max_length=20, choices=UNIT_CHOICES, help_text='Единица измерения')
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ['name']
 
     def __str__(self):
-        return f'{self.name}, {self.unit}'
+        return f'{self.name} ({self.unit})'
 
 
 class StockItem(models.Model):

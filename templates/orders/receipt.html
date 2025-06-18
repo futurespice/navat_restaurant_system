@@ -1,0 +1,203 @@
+!-- 1. templates/orders/receipt.html - ВИЗУАЛЬНЫЙ ЧЕК -->
+{% extends "base.html" %}
+
+{% block title %}Чек №{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .receipt-container {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+            max-width: 350px !important;
+            margin: 0 auto !important;
+        }
+        .btn { display: none !important; }
+        body { font-size: 12px; }
+    }
+
+    .receipt-container {
+        max-width: 400px;
+        margin: 0 auto;
+        font-family: 'Courier New', monospace;
+        background: white;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .receipt-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .receipt-body {
+        padding: 20px;
+    }
+
+    .dashed-line {
+        border-top: 2px dashed #ccc;
+        margin: 15px 0;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .receipt-total {
+        font-weight: bold;
+        font-size: 16px;
+        border-top: 2px solid #333;
+        padding-top: 10px;
+        margin-top: 15px;
+    }
+
+    .qr-code {
+        text-align: center;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="text-center mb-4 no-print">
+        <h2><i class="fas fa-receipt me-2 text-primary"></i>Чек заказа</h2>
+        <div class="btn-group" role="group">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print me-2"></i>Печать
+            </button>
+            <a href="{% url 'orders:detail' order.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>К заказу
+            </a>
+            <button onclick="downloadPDF()" class="btn btn-success">
+                <i class="fas fa-download me-2"></i>PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="receipt-container">
+        <!-- Заголовок чека -->
+        <div class="receipt-header">
+            <h3 class="mb-1">🍽️ НАВAT</h3>
+            <p class="mb-0">Сеть ресторанов</p>
+            <small>{{ order.restaurant.name }}</small>
+        </div>
+
+        <!-- Тело чека -->
+        <div class="receipt-body">
+            <!-- Информация о заказе -->
+            <div class="text-center mb-3">
+                <h5>ЧЕК №{{ order.id }}</h5>
+                <p class="mb-1">{{ order.created_at|date:"d.m.Y H:i" }}</p>
+                {% if order.table_number %}
+                <p class="mb-0">Стол №{{ order.table_number }}</p>
+                {% endif %}
+            </div>
+
+            <div class="dashed-line"></div>
+
+            <!-- Позиции заказа -->
+            {% for item in order.items.all %}
+            <div class="receipt-row">
+                <div class="flex-grow-1">
+                    <div>{{ item.menu_item.name }}</div>
+                    <small class="text-muted">
+                        {{ item.quantity }} × {{ item.price_at_moment|floatformat:0 }} сом
+                    </small>
+                </div>
+                <div class="text-end">
+                    <strong data-price="{{ item.get_cost }}">{{ item.get_cost|floatformat:0 }} сом</strong>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="dashed-line"></div>
+
+            <!-- Итого -->
+            <div class="receipt-row receipt-total">
+                <div>ИТОГО:</div>
+                <div data-price="{{ order.total_price }}">{{ order.total_price|floatformat:0 }} СОМ</div>
+            </div>
+
+            <!-- Дополнительная информация -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    Обслужил: {{ order.created_by.get_full_name|default:order.created_by.username }}<br>
+                    Статус: {{ order.get_status_display }}<br>
+                    {% if order.ingredients_processed %}
+                    ✅ Ингредиенты списаны
+                    {% else %}
+                    ⏳ Ингредиенты не списаны
+                    {% endif %}
+                </small>
+            </div>
+
+            <!-- QR код (опционально) -->
+            <div class="qr-code">
+                <div id="qrcode"></div>
+                <small class="text-muted d-block mt-2">
+                    Отсканируйте для просмотра заказа
+                </small>
+            </div>
+
+            <div class="dashed-line"></div>
+
+            <!-- Благодарность -->
+            <div class="text-center">
+                <p class="mb-1"><strong>Спасибо за ваш заказ!</strong></p>
+                <small class="text-muted">
+                    Приходите еще!<br>
+                    {{ order.restaurant.address }}<br>
+                    {{ order.restaurant.phone_number }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<script>
+// Генерация QR кода
+document.addEventListener('DOMContentLoaded', function() {
+    const orderUrl = window.location.origin + "{% url 'orders:detail' order.id %}";
+
+    QRCode.toCanvas(document.getElementById('qrcode'), orderUrl, {
+        width: 120,
+        height: 120,
+        margin: 2
+    }, function (error) {
+        if (error) console.error(error);
+    });
+});
+
+// Функция для скачивания PDF (упрощенная версия)
+function downloadPDF() {
+    // Используем browser print to PDF или можно интегрировать с библиотекой
+    window.print();
+}
+
+// Автоматическое форматирование валюты
+document.addEventListener('DOMContentLoaded', function() {
+    function formatSom(amount) {
+        return Math.round(amount).toLocaleString('ru-KG') + ' сом';
+    }
+
+    const priceElements = document.querySelectorAll('[data-price]');
+    priceElements.forEach(element => {
+        const price = parseFloat(element.dataset.price);
+        if (price > 0) {
+            element.textContent = formatSom(price);
+        }
+    });
+});
+</script>
+{% endblock %}
