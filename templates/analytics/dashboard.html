@@ -2,28 +2,79 @@
 
 {% block title %}Дашборд - Navat System{% endblock %}
 
+{% block extra_css %}
+<style>
+.metric-card {
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.growth-positive {
+    color: #28a745;
+}
+
+.growth-negative {
+    color: #dc3545;
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.recent-order-item {
+    transition: background-color 0.2s ease;
+}
+
+.recent-order-item:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h2 fw-bold text-dark">
             <i class="fas fa-chart-line me-2 text-primary"></i>Дашборд
         </h1>
-        <p class="text-muted">Обзор системы управления ресторанами</p>
+        <p class="text-muted">Обзор системы управления ресторанами Navat</p>
     </div>
     <div class="text-end">
-        <small class="text-muted">Обновлено: {{ "now"|date:"d.m.Y H:i" }}</small>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt"></i> Обновить
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportReport()">
+                <i class="fas fa-download"></i> Экспорт
+            </button>
+        </div>
+        <div class="mt-1">
+            <small class="text-muted">Обновлено: <span id="lastUpdate">{{ "now"|date:"d.m.Y H:i" }}</span></small>
+        </div>
     </div>
 </div>
 
-<!-- Карточки со статистикой -->
+<!-- Основные метрики -->
 <div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card metric-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ total_restaurants }}</div>
-                        <div class="small">Филиалов</div>
+                        <div class="h3 mb-0 fw-bold">{{ total_restaurants }}</div>
+                        <div class="small">Филиалов в сети</div>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-store fa-2x opacity-75"></i>
@@ -33,13 +84,23 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card metric-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ total_orders }}</div>
+                        <div class="h3 mb-0 fw-bold">{{ total_orders }}</div>
                         <div class="small">Всего заказов</div>
+                        <div class="mt-1">
+                            <small>
+                                {% if revenue_growth >= 0 %}
+                                    <i class="fas fa-arrow-up"></i> +{{ revenue_growth }}%
+                                {% else %}
+                                    <i class="fas fa-arrow-down"></i> {{ revenue_growth }}%
+                                {% endif %}
+                                за неделю
+                            </small>
+                        </div>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
@@ -49,13 +110,16 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card metric-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ total_menu_items }}</div>
+                        <div class="h3 mb-0 fw-bold">{{ total_menu_items }}</div>
                         <div class="small">Блюд в меню</div>
+                        <div class="mt-1">
+                            <small>{{ total_categories }} категорий</small>
+                        </div>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-utensils fa-2x opacity-75"></i>
@@ -65,12 +129,12 @@
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card metric-card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ total_users }}</div>
+                        <div class="h3 mb-0 fw-bold">{{ total_users }}</div>
                         <div class="small">Пользователей</div>
                     </div>
                     <div class="align-self-center">
@@ -82,145 +146,453 @@
     </div>
 </div>
 
-<!-- Статистика за 30 дней -->
+<!-- Финансовая статистика -->
 <div class="row mb-4">
-    <div class="col-md-6 mb-4">
-        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-1">Сегодня</h5>
+                <h3 class="text-primary mb-1">{{ today_revenue|floatformat:0 }} сом</h3>
+                <p class="text-muted mb-0">{{ today_orders }} заказов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-1">За неделю</h5>
+                <h3 class="text-success mb-1">{{ week_revenue|floatformat:0 }} сом</h3>
+                <p class="text-muted mb-0">{{ week_orders }} заказов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-1">За месяц</h5>
+                <h3 class="text-warning mb-1">{{ month_revenue|floatformat:0 }} сом</h3>
+                <p class="text-muted mb-0">{{ month_orders }} заказов</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Графики -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 py-3">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-calendar-alt me-2 text-primary"></i>За последние 30 дней
-                </h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>Динамика продаж
+                    </h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="loadChart('sales', 7)">7 дней</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="loadChart('sales', 30)">30 дней</button>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="h3 text-primary fw-bold">{{ recent_orders_count }}</div>
-                        <div class="text-muted">Заказов</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="h3 text-success fw-bold">{{ recent_revenue|floatformat:0 }} сом</div>
-                        <div class="text-muted">Выручка</div>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
-        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 py-3">
                 <h5 class="mb-0 fw-bold">
                     <i class="fas fa-chart-pie me-2 text-primary"></i>Статусы заказов
                 </h5>
             </div>
             <div class="card-body">
-                {% for status_data in orders_by_status %}
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted">{{ status_data.status }}</span>
-                    <span class="badge bg-primary rounded-pill">{{ status_data.count }}</span>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="statusChart"></canvas>
                 </div>
-                {% empty %}
-                <p class="text-muted text-center">Нет данных</p>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Топ филиалы и последние заказы -->
-<div class="row">
+<!-- Топ филиалы и популярные блюда -->
+<div class="row mb-4">
     <div class="col-md-6 mb-4">
-        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 py-3">
                 <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-trophy me-2 text-warning"></i>Топ филиалы
+                    <i class="fas fa-trophy me-2 text-warning"></i>Топ филиалов
                 </h5>
             </div>
             <div class="card-body">
                 {% for restaurant in top_restaurants %}
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="fas fa-store text-white"></i>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <div class="fw-semibold">{{ restaurant.name }}</div>
-                            <small class="text-muted">{{ restaurant.address|truncatechars:30 }}</small>
+                            <h6 class="mb-1">{{ restaurant.name }}</h6>
+                            <small class="text-muted">{{ restaurant.orders_count }} заказов</small>
+                        </div>
+                        <div class="text-end">
+                            <strong>{{ restaurant.revenue|default:0|floatformat:0 }} сом</strong>
+                            {% if restaurant.avg_order_value %}
+                                <br><small class="text-muted">Средний чек: {{ restaurant.avg_order_value|floatformat:0 }} сом</small>
+                            {% endif %}
                         </div>
                     </div>
-                    <span class="badge bg-primary rounded-pill">{{ restaurant.orders_count }}</span>
-                </div>
+                    {% if not forloop.last %}<hr class="my-2">{% endif %}
                 {% empty %}
-                <p class="text-muted text-center">Нет данных</p>
+                    <p class="text-muted text-center">Нет данных о заказах</p>
                 {% endfor %}
             </div>
         </div>
     </div>
 
     <div class="col-md-6 mb-4">
-        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 py-3">
                 <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-clock me-2 text-info"></i>Последние заказы
+                    <i class="fas fa-star me-2 text-success"></i>Популярные блюда
                 </h5>
             </div>
             <div class="card-body">
-                {% for order in recent_orders %}
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <div class="fw-semibold">Заказ #{{ order.id }}</div>
-                        <small class="text-muted">{{ order.restaurant.name }} • {{ order.created_at|date:"d.m H:i" }}</small>
+                {% for dish in popular_dishes|slice:":5" %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if dish.image %}
+                                <img src="{{ dish.image.url }}" alt="{{ dish.name }}"
+                                     class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ dish.name }}</h6>
+                                <small class="text-muted">{{ dish.category.name }}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary">{{ dish.order_count }}</span>
+                            <br><small class="text-muted">{{ dish.price }} сом</small>
+                        </div>
                     </div>
-                    <div class="text-end">
-                        <div class="fw-semibold">{{ order.total_price }} сом</div>
-                        <span class="badge bg-{% if order.status == 'COMPLETED' %}success{% elif order.status == 'PENDING' %}warning{% else %}primary{% endif %} rounded-pill small">
-                            {{ order.get_status_display }}
-                        </span>
-                    </div>
-                </div>
+                    {% if not forloop.last %}<hr class="my-2">{% endif %}
                 {% empty %}
-                <p class="text-muted text-center">Нет заказов</p>
+                    <p class="text-muted text-center">Нет данных о заказах</p>
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Популярные блюда -->
+<!-- Последние заказы -->
 <div class="row">
     <div class="col-12">
-        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 py-3">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-star me-2 text-warning"></i>Популярные блюда
-                </h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-clock me-2 text-info"></i>Последние заказы
+                    </h5>
+                    <a href="{% url 'analytics:reports' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chart-bar"></i> Все отчеты
+                    </a>
+                </div>
             </div>
             <div class="card-body">
-                <div class="row">
-                    {% for item in popular_items %}
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="d-flex align-items-center">
-                            {% if item.image %}
-                                <img src="{{ item.image.url }}" class="rounded me-3" width="50" height="50" style="object-fit: cover;">
-                            {% else %}
-                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="fas fa-utensils text-muted"></i>
-                                </div>
-                            {% endif %}
-                            <div>
-                                <div class="fw-semibold">{{ item.name }}</div>
-                                <small class="text-muted">{{ item.order_count }} заказов</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="col-12">
-                        <p class="text-muted text-center">Нет данных</p>
-                    </div>
-                    {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>№ Заказа</th>
+                                <th>Филиал</th>
+                                <th>Стол</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Время</th>
+                                <th>Сотрудник</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                                <tr class="recent-order-item">
+                                    <td><strong>#{{ order.id }}</strong></td>
+                                    <td>{{ order.restaurant.name }}</td>
+                                    <td>
+                                        {% if order.table_number %}
+                                            <i class="fas fa-chair"></i> {{ order.table_number }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ order.total_price|floatformat:0 }} сом</strong></td>
+                                    <td>
+                                        {% if order.status == 'PENDING' %}
+                                            <span class="badge bg-warning status-badge">Ожидает</span>
+                                        {% elif order.status == 'IN_PROGRESS' %}
+                                            <span class="badge bg-info status-badge">Готовится</span>
+                                        {% elif order.status == 'COMPLETED' %}
+                                            <span class="badge bg-success status-badge">Завершен</span>
+                                        {% elif order.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger status-badge">Отменен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.created_at|date:"H:i" }}</td>
+                                    <td>
+                                        {% if order.created_by %}
+                                            {{ order.created_by.get_full_name|default:order.created_by.username }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-shopping-cart fa-2x mb-2"></i><br>
+                                        Пока нет заказов
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Данные для графиков
+const dailySalesData = {{ daily_sales_json|safe }};
+const statusData = {{ status_chart_json|safe }};
+
+// Инициализация графиков
+let salesChart;
+let statusChart;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initSalesChart();
+    initStatusChart();
+
+    // Автообновление каждые 5 минут
+    setInterval(refreshDashboard, 300000);
+
+    // Анимируем числа в карточках метрик
+    document.querySelectorAll('.metric-card .h3').forEach(el => {
+        const target = parseInt(el.textContent);
+        if (!isNaN(target)) {
+            el.textContent = '0';
+            setTimeout(() => animateCounter(el, target), 500);
+        }
+    });
+});
+
+function initSalesChart() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+
+    salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailySalesData.map(item => {
+                const date = new Date(item.date);
+                return date.getDate() + '.' + (date.getMonth() + 1);
+            }),
+            datasets: [{
+                label: 'Выручка (сом)',
+                data: dailySalesData.map(item => item.revenue),
+                borderColor: '#4facfe',
+                backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Количество заказов',
+                data: dailySalesData.map(item => item.orders),
+                borderColor: '#f5576c',
+                backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Выручка (сом)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Количество заказов'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+}
+
+function initStatusChart() {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+
+    statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(item => item.status),
+            datasets: [{
+                data: statusData.map(item => item.count),
+                backgroundColor: [
+                    '#ffc107', // Ожидает
+                    '#17a2b8', // Готовится
+                    '#28a745', // Завершен
+                    '#dc3545'  // Отменен
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function loadChart(type, period) {
+    // Обновляем активную кнопку
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Загружаем новые данные
+    fetch(`/dashboard/api/?chart=${type}&period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            if (type === 'sales' && salesChart) {
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.revenue;
+                salesChart.data.datasets[1].data = data.orders;
+                salesChart.update();
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки данных:', error);
+            showToast('Ошибка загрузки данных графика', 'error');
+        });
+}
+
+function refreshDashboard() {
+    // Показываем индикатор загрузки
+    showToast('Обновление данных...', 'info');
+
+    // Перезагружаем страницу для обновления всех данных
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function exportReport() {
+    // Функция экспорта отчета
+    showToast('Подготовка отчета...', 'info');
+
+    // Здесь можно добавить логику экспорта
+    setTimeout(() => {
+        showToast('Функция экспорта будет добавлена в следующих версиях', 'warning');
+    }, 1500);
+}
+
+// Функция показа уведомлений
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${getBootstrapColorClass(type)} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas ${getToastIcon(type)} me-2"></i>${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    // Удаляем toast после скрытия
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+
+function getBootstrapColorClass(type) {
+    const colors = {
+        'success': 'success',
+        'error': 'danger',
+        'warning': 'warning',
+        'info': 'info'
+    };
+    return colors[type] || 'info';
+}
+
+function getToastIcon(type) {
+    const icons = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    };
+    return icons[type] || 'fa-info-circle';
+}
+
+// Функция для анимации счетчиков
+function animateCounter(element, target) {
+    let current = 0;
+    const increment = target / 100;
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        element.textContent = Math.floor(current);
+    }, 20);
+}
+</script>
 {% endblock %}

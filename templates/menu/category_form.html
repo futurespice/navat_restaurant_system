@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">{{ page_title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Название категории *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.sort_order.id_for_label }}" class="form-label">Порядок сортировки</label>
+                            {{ form.sort_order }}
+                            {% if form.sort_order.errors %}
+                                <div class="text-danger">{{ form.sort_order.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Чем меньше число, тем выше в списке</div>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Описание категории</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Краткое описание категории для посетителей</div>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">Изображение категории</label>
+                            <div class="image-upload-area">
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                    <div class="text-danger">{{ form.image.errors }}</div>
+                                {% endif %}
+
+                                {% if object.image %}
+                                    <div class="current-image mt-2">
+                                        <p class="small text-muted">Текущее изображение:</p>
+                                        <img src="{{ object.image.url }}" alt="{{ object.name }}"
+                                             class="img-thumbnail" style="max-width: 200px;">
+                                    </div>
+                                {% endif %}
+
+                                <div class="image-preview mt-2" style="display: none;">
+                                    <p class="small text-muted">Предварительный просмотр:</p>
+                                    <img id="imagePreview" class="img-thumbnail" style="max-width: 200px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if object %}
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Категория активна
+                                </label>
+                                {% if form.is_active.errors %}
+                                    <div class="text-danger">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Неактивные категории не отображаются в меню</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'menu:category_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Боковая панель -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Подсказки</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Название:</strong>
+                    <p class="small text-muted">Используйте короткие и понятные названия категорий</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Описание:</strong>
+                    <p class="small text-muted">Краткое описание поможет посетителям понять, какие блюда входят в категорию</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Порядок сортировки:</strong>
+                    <p class="small text-muted">Чем меньше число, тем выше категория в списке. Рекомендуется использовать числа кратные 10</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Изображение:</strong>
+                    <p class="small text-muted">Рекомендуемый размер: 800x600px. Форматы: JPG, PNG</p>
+                </div>
+            </div>
+        </div>
+
+        {% if object %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Информация</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Блюд в категории:</strong> {{ object.get_dishes_count }}
+                </div>
+                <div class="small text-muted">
+                    Создано: {{ object.created_at|date:"d.m.Y H:i" }}<br>
+                    Обновлено: {{ object.updated_at|date:"d.m.Y H:i" }}
+                </div>
+
+                {% if object.get_dishes_count > 0 %}
+                    <hr>
+                    <div class="alert alert-warning small">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        При удалении категории все блюда в ней будут также удалены!
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Предварительный просмотр изображения
+    const imageInput = document.getElementById('id_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewContainer = document.querySelector('.image-preview');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // Добавляем Bootstrap классы к полям формы
+    document.querySelectorAll('input, select, textarea').forEach(function(element) {
+        if (!element.classList.contains('form-check-input')) {
+            element.classList.add('form-control');
+        }
+    });
+});
+</script>
+
+<style>
+.image-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    text-align: center;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.image-upload-area:hover {
+    border-color: #adb5bd;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+</style>
+
+{% endblock %}

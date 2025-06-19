@@ -241,10 +241,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('input[placeholder*="руб"], input[placeholder*="₽"], label');
     inputs.forEach(input => {
         if (input.placeholder) {
-            input.placeholder = input.placeholder.replace(/(руб|₽|rub|р\.|р)/gi, 'сом');
+            input.placeholder = input.placeholder.replace(/(руб|₽|rub|р\.|р)/gi, 'р');
         }
         if (input.textContent) {
-            input.textContent = input.textContent.replace(/(руб|₽|rub|р\.|р)/gi, 'сом');
+            input.textContent = input.textContent.replace(/(руб|₽|rub|р\.|р)/gi, 'р');
         }
     });
 });

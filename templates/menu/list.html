@@ -4,44 +4,208 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h2">Меню ресторана</h1>
-    <a href="{% url 'menu:item_create' %}" class="btn btn-primary">
-        + Добавить блюдо
-    </a>
+    <h1 class="h2">Управление меню</h1>
+    <div>
+        <a href="{% url 'menu:category_list' %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-folder"></i> Категории
+        </a>
+        <a href="{% url 'menu:item_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Добавить блюдо
+        </a>
+    </div>
 </div>
 
-{% for category in categories %}
-<div class="mb-5">
-    <h3 class="border-bottom pb-2 mb-3">{{ category.name }}</h3>
-    {% if category.menu_items.all %}
-    <div class="list-group">
-        {% for item in category.menu_items.all %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                {% if item.image %}
-                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="me-3 rounded" style="width: 80px; height: 80px; object-fit: cover;">
-                {% endif %}
-                <div>
-                    <h5 class="mb-1">{{ item.name }}</h5>
-                    <p class="mb-1 text-muted">{{ item.price }} сом</p>
-                    {% if not item.is_available %}
-                        <span class="badge bg-secondary">Недоступно</span>
+<!-- Панель фильтров и поиска -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Поиск по названию:</label>
+                <input type="text" class="form-control" id="search" name="search"
+                       value="{{ search_query }}" placeholder="Введите название блюда...">
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Категория:</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">Все категории</option>
+                    {% for cat in all_categories %}
+                        <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="availability" class="form-label">Доступность:</label>
+                <select class="form-select" id="availability" name="availability">
+                    <option value="">Все</option>
+                    <option value="available" {% if availability_filter == 'available' %}selected{% endif %}>Доступные</option>
+                    <option value="unavailable" {% if availability_filter == 'unavailable' %}selected{% endif %}>Недоступные</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-search"></i> Найти
+                </button>
+            </div>
+        </form>
+        {% if is_filtered %}
+            <div class="mt-3">
+                <a href="{% url 'menu:list' %}" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-times"></i> Сбросить фильтры
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Результаты поиска или список по категориям -->
+{% if is_filtered %}
+    <!-- Отображение результатов поиска -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Результаты поиска</h5>
+        </div>
+        <div class="card-body">
+            {% if filtered_dishes %}
+                <div class="row">
+                    {% for item in filtered_dishes %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            {% include 'menu/components/dish_card.html' with dish=item %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">По вашему запросу ничего не найдено.</p>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <!-- Обычное отображение по категориям -->
+    {% for category in categories %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    {% if category.image %}
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}"
+                             class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;">
                     {% endif %}
+                    {{ category.name }}
+                    <span class="badge bg-secondary ms-2">{{ category.get_dishes_count }}</span>
+                </h4>
+                <div>
+                    <a href="{% url 'menu:category_update' pk=category.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-edit"></i>
+                    </a>
                 </div>
             </div>
-            <div>
-                <a href="{% url 'menu:item_update' pk=item.pk %}" class="btn btn-sm btn-outline-secondary">Редактировать</a>
-                <a href="{% url 'menu:item_delete' pk=item.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+            <div class="card-body">
+                {% if category.description %}
+                    <p class="text-muted mb-3">{{ category.description }}</p>
+                {% endif %}
+
+                {% if category.menu_items.all %}
+                    <div class="row">
+                        {% for item in category.menu_items.all %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                {% include 'menu/components/dish_card.html' with dish=item %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-3">В этой категории пока нет блюд</p>
+                        <a href="{% url 'menu:item_create' %}?category={{ category.id }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus"></i> Добавить первое блюдо
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="text-muted">В этой категории пока нет блюд.</p>
-    {% endif %}
-</div>
-{% empty %}
-    <p>В меню еще не добавлено ни одной категории или блюда. Начните с <a href="{% url 'admin:menu_category_add' %}">добавления категории</a> в админ-панели.</p>
-{% endfor %}
+    {% empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+            <h4>Меню пустое</h4>
+            <p class="text-muted">Начните с создания категорий и добавления блюд</p>
+            <a href="{% url 'menu:category_create' %}" class="btn btn-primary me-2">
+                <i class="fas fa-folder-plus"></i> Создать категорию
+            </a>
+            <a href="{% url 'menu:item_create' %}" class="btn btn-outline-primary">
+                <i class="fas fa-plus"></i> Добавить блюдо
+            </a>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Подключаем JavaScript для интерактивности -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Переключение доступности блюда
+    document.querySelectorAll('.toggle-availability').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const dishId = this.dataset.dishId;
+            const dishName = this.dataset.dishName;
+
+            fetch(`/menu/ajax/dish/${dishId}/toggle-availability/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновляем интерфейс
+                    const badge = this.parentElement.querySelector('.availability-badge');
+                    const icon = this.querySelector('i');
+
+                    if (data.is_available) {
+                        badge.className = 'badge bg-success availability-badge';
+                        badge.textContent = 'Доступно';
+                        icon.className = 'fas fa-eye-slash';
+                        this.className = 'btn btn-sm btn-outline-warning toggle-availability';
+                        this.title = 'Скрыть из меню';
+                    } else {
+                        badge.className = 'badge bg-secondary availability-badge';
+                        badge.textContent = 'Недоступно';
+                        icon.className = 'fas fa-eye';
+                        this.className = 'btn btn-sm btn-outline-success toggle-availability';
+                        this.title = 'Показать в меню';
+                    }
+
+                    // Показываем уведомление
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Произошла ошибка', 'error');
+            });
+        });
+    });
+});
+
+// Функция показа уведомлений
+function showToast(message, type) {
+    // Простая реализация уведомлений
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
 
 {% endblock %}

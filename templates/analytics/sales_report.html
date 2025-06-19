@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Отчет по продажам - Navat System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark">
+            <i class="fas fa-chart-bar me-2 text-primary"></i>Отчет по продажам
+        </h1>
+        <p class="text-muted">Детальная аналитика продаж и выручки</p>
+    </div>
+    <div>
+        <a href="{% url 'analytics:reports' %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> К отчетам
+        </a>
+        <button type="button" class="btn btn-primary" onclick="exportSalesReport()">
+            <i class="fas fa-download"></i> Экспорт
+        </button>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">Дата начала:</label>
+                <input type="date" class="form-control" id="start_date" name="start_date"
+                       value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">Дата окончания:</label>
+                <input type="date" class="form-control" id="end_date" name="end_date"
+                       value="{{ end_date }}">
+            </div>
+            <div class="col-md-4">
+                <label for="branch" class="form-label">Филиал:</label>
+                <select class="form-select" id="branch" name="branch">
+                    <option value="">Все филиалы</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}"
+                                {% if selected_branch == branch.id|stringformat:"s" %}selected{% endif %}>
+                            {{ branch.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-search"></i> Применить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Основные метрики -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <h3 class="text-primary mb-1">{{ total_orders }}</h3>
+                <p class="text-muted mb-0">Всего заказов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <h3 class="text-success mb-1">{{ total_revenue|floatformat:0 }} сом</h3>
+                <p class="text-muted mb-0">Общая выручка</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <h3 class="text-info mb-1">{{ avg_order_value|floatformat:0 }} сом</h3>
+                <p class="text-muted mb-0">Средний чек</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- График продаж по дням -->
+{% if daily_sales %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Динамика продаж по дням
+                </h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 400px;">
+                    <canvas id="dailySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Таблица продаж по дням -->
+{% if daily_sales %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-table me-2 text-primary"></i>Детализация по дням
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Количество заказов</th>
+                                <th>Выручка</th>
+                                <th>Средний чек</th>
+                                <th>День недели</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_sales %}
+                                <tr>
+                                    <td>{{ day.created_at__date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ day.orders_count }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ day.revenue|floatformat:0 }} сом</strong>
+                                    </td>
+                                    <td>
+                                        {% if day.orders_count > 0 %}
+                                            {% widthratio day.revenue day.orders_count 1 %} сом
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ day.created_at__date|date:"l" }}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+    <h4>Нет данных для отображения</h4>
+    <p class="text-muted">Выберите другой период или филиал</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if daily_sales %}
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('dailySalesChart').getContext('2d');
+
+    const data = [
+        {% for day in daily_sales %}
+        {
+            date: '{{ day.created_at__date|date:"d.m" }}',
+            orders: {{ day.orders_count }},
+            revenue: {{ day.revenue|default:0 }}
+        },
+        {% endfor %}
+    ];
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(item => item.date),
+            datasets: [{
+                label: 'Выручка (сом)',
+                data: data.map(item => item.revenue),
+                borderColor: '#4facfe',
+                backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Количество заказов',
+                data: data.map(item => item.orders),
+                borderColor: '#f5576c',
+                backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Выручка (сом)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Количество заказов'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+});
+{% endif %}
+
+function exportSalesReport() {
+    alert('Функция экспорта будет добавлена в следующих версиях');
+}
+</script>
+{% endblock %}
